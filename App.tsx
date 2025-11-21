@@ -1,8 +1,9 @@
+
 import React, { useState, useCallback } from 'react';
 import { Header } from './components/Header';
 import { ReflectionForm } from './components/ReflectionForm';
 import { AnalysisView } from './components/AnalysisView';
-import { ReflectionInput, AIAnalysis, LoadingState, DEFAULT_INPUT, Language } from './types';
+import { ReflectionInput, AIAnalysis, LoadingState, DEFAULT_INPUT, Language, ReflectionItem } from './types';
 import { analyzeReflection } from './services/geminiService';
 import { translations } from './i18n';
 
@@ -15,8 +16,37 @@ const App: React.FC = () => {
 
   const t = translations[language];
 
-  const handleInputChange = useCallback((field: keyof ReflectionInput, value: string) => {
+  const handleDidChange = useCallback((value: string[]) => {
+    setInput(prev => ({ ...prev, did: value }));
+  }, []);
+
+  const handleComplexChange = useCallback((field: 'bad' | 'thinking', value: ReflectionItem[]) => {
     setInput(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  const handleFillTemplate = useCallback(() => {
+    setInput({
+      did: [
+        "口语练习",
+        "学AI agent",
+        "健身"
+      ],
+      bad: [
+        {
+            id: 'b1',
+            title: "短视频刷太多了",
+            description: "短视频刷太多了，似乎大脑累的时候，总是有些间隙想消费一些轻松的无脑的内容，所以就寻求短视频。\n\n大脑不能过度消耗，要找到个节奏，累了就睡觉，而不是寻求二进制垃圾。\n大脑需要一些有营养的东西，而且还不能过度，可以用饮食模型来解释大脑使用吗？\n\n我的理想状态是：保持思考，杜绝过度用脑（因为睡不着，想看短视频），看书、听内容，消费一些有营养的东西。"
+        }
+      ],
+      thinking: [
+        {
+            id: 't1',
+            title: "目标还是不够清晰",
+            description: "我的学习目标还是不够清晰，至少要有2个礼拜的目标，这个目标要有清晰的落地点。\n\n比如学Ai agent，两个礼拜后，要达成什么：文章输出？项目输出？\n\n学口语，两个礼拜要达成什么：\n- 流畅度？\n- 回答一个问题，组织一个答案要多久\n- 词汇记忆和使用\n怎么测试自己是否达成了目标呢？"
+        }
+      ]
+    });
+    setLanguage('zh');
   }, []);
 
   const handleSubmit = useCallback(async () => {
@@ -61,8 +91,10 @@ const App: React.FC = () => {
         ) : (
           <ReflectionForm 
             input={input} 
-            onChange={handleInputChange} 
+            onDidChange={handleDidChange}
+            onComplexChange={handleComplexChange}
             onSubmit={handleSubmit} 
+            onFillTemplate={handleFillTemplate}
             isLoading={status === LoadingState.LOADING}
             t={t}
           />

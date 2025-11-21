@@ -1,28 +1,70 @@
+
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { AIAnalysis, ReflectionInput, Language } from "../types";
 
 const analysisSchema: Schema = {
   type: Type.OBJECT,
   properties: {
-    essence: {
-      type: Type.STRING,
-      description: "A deep analysis of the root cause of the problem based on the 'Bad' and 'Thinking' inputs.",
-    },
-    key_insight: {
-      type: Type.STRING,
-      description: "A one-sentence profound insight or 'aha moment' regarding their situation.",
-    },
-    actionable_steps: {
+    bad_modules: {
       type: Type.ARRAY,
-      items: { type: Type.STRING },
-      description: "3-4 concrete, specific, and actionable steps the user can take to improve.",
+      description: "An array of analysis modules. You MUST create one separate module for EACH item listed in the user's BAD section.",
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          related_item_title: {
+            type: Type.STRING,
+            description: "The exact title of the user's Bad item that this module is analyzing.",
+          },
+          theory: {
+            type: Type.STRING,
+            description: "The specific scientific theory or behavioral concept explaining this behavior (e.g., 'Dopamine Feedback Loop', 'Decision Fatigue', 'Ego Depletion', 'Hyperbolic Discounting').",
+          },
+          explanation: {
+            type: Type.STRING,
+            description: "Deep dive explanation of why this behavior happened based on the theory. Be analytical, not descriptive.",
+          },
+          actions: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "3 specific, immediate actionable steps to correct this behavior.",
+          },
+        },
+        required: ["related_item_title", "theory", "explanation", "actions"],
+      },
+    },
+    thinking_modules: {
+      type: Type.ARRAY,
+      description: "An array of analysis modules. You MUST create one separate module for EACH item listed in the user's THINKING section.",
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          related_item_title: {
+            type: Type.STRING,
+            description: "The exact title of the user's Thinking item that this module is analyzing.",
+          },
+          theory: {
+            type: Type.STRING,
+            description: "The specific cognitive psychology concept or mental model (e.g., 'Imposter Syndrome', 'Spotlight Effect', 'Fixed Mindset', 'Cognitive Dissonance').",
+          },
+          explanation: {
+            type: Type.STRING,
+            description: "Deep dive explanation of the mental blocker. Why is the user thinking this way?",
+          },
+          actions: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "3 specific cognitive reframing exercises or thinking tools.",
+          },
+        },
+        required: ["related_item_title", "theory", "explanation", "actions"],
+      },
     },
     encouragement: {
       type: Type.STRING,
-      description: "A short, wise, and empathetic closing statement or motto.",
+      description: "A final, brief reality-check or grounding statement.",
     },
   },
-  required: ["essence", "key_insight", "actionable_steps", "encouragement"],
+  required: ["bad_modules", "thinking_modules", "encouragement"],
 };
 
 export const analyzeReflection = async (input: ReflectionInput, language: Language): Promise<AIAnalysis> => {
@@ -32,30 +74,55 @@ export const analyzeReflection = async (input: ReflectionInput, language: Langua
 
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-  const languageInstruction = language === 'zh' 
-    ? "IMPORTANT: Output the JSON response values strictly in Simplified Chinese (zh-CN)." 
-    : "IMPORTANT: Output the JSON response values in English.";
+  // Format arrays for prompt
+  const didText = input.did.filter(i => i.trim()).map(i => `- ${i}`).join('\n');
+  
+  // Format Complex Objects into readable text
+  const badText = input.bad
+    .filter(i => i.title.trim())
+    .map((i, idx) => `Item ${idx + 1} Title: ${i.title}\n   Item ${idx + 1} Details: ${i.description || 'No details'}`)
+    .join('\n\n');
+
+  const thinkingText = input.thinking
+    .filter(i => i.title.trim())
+    .map((i, idx) => `Item ${idx + 1} Title: ${i.title}\n   Item ${idx + 1} Details: ${i.description || 'No details'}`)
+    .join('\n\n');
 
   const prompt = `
-    You are a world-class Life Coach and Mentor. You are wise, empathetic, but sharp and direct when identifying problems.
+    You are an expert Behavioral Scientist and Strategy Consultant.
     
-    The user is performing a daily reflection using the "Did / Bad / Thinking" framework:
-    - **Did**: What they completed today.
-    - **Bad**: What they felt they didn't do well or needs improvement (Focus here for problems).
-    - **Thinking**: Random thoughts, context, or mental noise (Use this for root cause analysis).
+    **TASK:**
+    Analyze the user's daily reflection. The user provides three sections: DID, BAD, and THINKING.
+    
+    **ANALYSIS RULES:**
+    1. **DID Section:** This is context only. Do NOT analyze it. Use it to understand the user's day.
+    2. **BAD Section (Behavioral Analysis):** 
+       - For EACH item listed in the BAD section, provide a separate analysis module.
+       - Focus strictly on what went wrong in their actions/habits.
+       - Identify the **Root Cause** using a specific **Scientific Theory** or **Psychological Concept**.
+       - Do NOT give literary advice. Give scientific explanations.
+    3. **THINKING Section (Cognitive Analysis):**
+       - For EACH item listed in the THINKING section, provide a separate analysis module.
+       - Focus strictly on their internal monologue, doubts, or confusion.
+       - Identify the **Cognitive Bias** or **Mental Model** failure.
+       - Do NOT mix this with the Bad section. Treat it as a separate cognitive problem.
 
-    Your Task:
-    1. Read the following inputs carefully.
-    2. Analyze the **essence** of the problem. Don't just repeat what they did wrong; explain *why* it happened based on their thinking patterns or behaviors.
-    3. Provide concrete **actionable steps** to fix this or improve tomorrow.
-    4. Be concise, professional, yet warm.
-    5. ${languageInstruction}
+    **OUTPUT RULES:**
+    - **Language:** IF User Input is Chinese -> Output Simplified Chinese. IF English -> Output English.
+    - **Tone:** Objective, Analytical, Clinical. No fluff. No "It's okay to feel this way."
+    - **Theories:** specific terms are required (e.g., "Zeigarnik Effect", "Pareto Principle", "Dunning-Kruger Effect").
+    - **Structure:** The output JSON must contain arrays 'bad_modules' and 'thinking_modules', with one entry for each valid input item.
 
     User's Reflection:
     ---
-    DID: ${input.did}
-    BAD: ${input.bad}
-    THINKING: ${input.thinking}
+    [DID - Context (Do Not Analyze)]
+    ${didText || "No entry"}
+
+    [BAD - Analyze Behaviors (Create one analysis per item)]
+    ${badText || "No entry"}
+
+    [THINKING - Analyze Cognition (Create one analysis per item)]
+    ${thinkingText || "No entry"}
     ---
   `;
 
@@ -66,8 +133,7 @@ export const analyzeReflection = async (input: ReflectionInput, language: Langua
       config: {
         responseMimeType: "application/json",
         responseSchema: analysisSchema,
-        systemInstruction: "You are an expert mentor focusing on productivity, psychology, and personal growth.",
-        temperature: 0.7,
+        temperature: 0.3, 
       },
     });
 
