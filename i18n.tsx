@@ -28,12 +28,14 @@ interface Translation {
   addMore: string;
   limitReached: string;
   maxLimitBadge: string;
+  tutorial: string;
+  xiaohongshuProfile: string;
 }
 
 export const translations: Record<Language, Translation> = {
   en: {
     subtitle: (
-      <>Your daily AI mentor. Reflect on what you <span className="font-semibold text-slate-700">Did</span>, what was <span className="font-semibold text-red-500">Bad</span>, and what you're <span className="font-semibold text-blue-500">Thinking</span>.</>
+      <>Your AI Reflection Mentor. Reflect on what you <span className="font-semibold text-slate-700">Did</span>, what was <span className="font-semibold text-red-500">Bad</span>, and what you're <span className="font-semibold text-blue-500">Thinking</span>.</>
     ),
     didLabel: "Did (Tasks Completed)",
     didPlaceholder: "Add a completed task...",
@@ -59,10 +61,12 @@ export const translations: Record<Language, Translation> = {
     addMore: "Add Item",
     limitReached: "Limit Reached",
     maxLimitBadge: "Max 3 Items - Focus on the Critical Few",
+    tutorial: "Read Tutorial",
+    xiaohongshuProfile: "My Xiaohongshu",
   },
   zh: {
     subtitle: (
-      <>你的每日 AI 导师。复盘你 <span className="font-semibold text-slate-700">做了什么 (Did)</span>，哪里 <span className="font-semibold text-red-500">做得不好 (Bad)</span>，以及当下的 <span className="font-semibold text-blue-500">思考 (Thinking)</span>。</>
+      <>你的 AI 复盘导师。复盘你 <span className="font-semibold text-slate-700">做了什么 (Did)</span>，哪里 <span className="font-semibold text-red-500">做得不好 (Bad)</span>，以及当下的 <span className="font-semibold text-blue-500">思考 (Thinking)</span>。</>
     ),
     didLabel: "Did (我做了什么)",
     didPlaceholder: "输入已完成的事项...",
@@ -88,5 +92,7 @@ export const translations: Record<Language, Translation> = {
     addMore: "添加事项",
     limitReached: "已达上限",
     maxLimitBadge: "上限3条，深度复盘核心问题",
+    tutorial: "复盘思路教程",
+    xiaohongshuProfile: "关注我的小红书",
   }
 };

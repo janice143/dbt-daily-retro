@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { ReflectionInput, ReflectionItem } from '../types';
-import { CheckCircle2, AlertCircle, Cloud, Sparkles, Wand2, Plus, X, Info } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Cloud, Sparkles, Wand2, Plus, X, Info, BookOpen } from 'lucide-react';
 
 interface Props {
   input: ReflectionInput;
@@ -23,6 +23,7 @@ interface Props {
     addMore: string;
     limitReached: string;
     maxLimitBadge: string;
+    tutorial: string;
   }
 }
 
@@ -236,7 +237,16 @@ export const ReflectionForm: React.FC<Props> = ({ input, onDidChange, onComplexC
   return (
     <div className="grid gap-8 max-w-2xl mx-auto w-full px-4 animate-fade-in-up relative">
       
-      <div className="absolute -top-10 right-4 md:right-0">
+      <div className="absolute -top-10 right-4 md:right-0 flex items-center gap-4">
+        <a 
+          href="https://www.believed-breadfruit.top/2025/11/22/2025-11-22-%E4%B8%80%E4%B8%AAai%E6%9E%81%E7%AE%80%E5%A4%8D%E7%9B%98%E6%80%9D%E8%B7%AF/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-xs font-medium text-slate-400 hover:text-brand-600 flex items-center gap-1 transition-colors"
+        >
+          <BookOpen className="w-3 h-3" />
+          {t.tutorial}
+        </a>
         <button
           onClick={onFillTemplate}
           disabled={isLoading}

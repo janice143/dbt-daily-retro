@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Header } from './components/Header';
 import { ReflectionForm } from './components/ReflectionForm';
@@ -111,8 +112,19 @@ const App: React.FC = () => {
       </div>
       
       {/* Footer */}
-      <div className="fixed bottom-4 w-full text-center pointer-events-none">
-         <p className="text-xs text-slate-300">{t.footer}</p>
+      <div className="fixed bottom-4 w-full text-center z-20 pointer-events-none">
+         <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-100 shadow-sm pointer-events-auto">
+            <p className="text-xs text-slate-400">{t.footer}</p>
+            <span className="text-slate-300">|</span>
+            <a 
+              href="https://www.xiaohongshu.com/user/profile/5d17984f0000000012021c90" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-slate-500 hover:text-red-500 transition-colors"
+            >
+              {t.xiaohongshuProfile}
+            </a>
+         </div>
       </div>
       
       <style>{`
