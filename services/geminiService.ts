@@ -7,61 +7,55 @@ const analysisSchema: Schema = {
   properties: {
     bad_modules: {
       type: Type.ARRAY,
-      description: "An array of analysis modules. You MUST create one separate module for EACH item listed in the user's BAD section.",
+      description: "Analysis modules for BAD section items.",
       items: {
         type: Type.OBJECT,
         properties: {
-          related_item_title: {
+          related_item_id: { type: Type.STRING, description: "The ID of the input item this analysis belongs to." },
+          essence: {
             type: Type.STRING,
-            description: "The exact title of the user's Bad item that this module is analyzing.",
+            description: "1. The Essence: What is the core nature of this problem? Dig deep but explain it simply. (e.g., 'It's not laziness, it's fear of imperfection').",
           },
-          theory: {
+          true_goal: {
             type: Type.STRING,
-            description: "The specific scientific theory or behavioral concept explaining this behavior (e.g., 'Dopamine Feedback Loop', 'Decision Fatigue', 'Ego Depletion', 'Hyperbolic Discounting').",
+            description: "2. True Goal: What is the user subconsciously trying to achieve? (e.g., 'You are seeking mental rest, not entertainment').",
           },
-          explanation: {
-            type: Type.STRING,
-            description: "Deep dive explanation of why this behavior happened based on the theory. Be analytical, not descriptive.",
-          },
-          actions: {
+          suggestions: {
             type: Type.ARRAY,
             items: { type: Type.STRING },
-            description: "3 specific, immediate actionable steps to correct this behavior.",
+            description: "3. AI Suggestions: Provide exactly 3 distinct, actionable, and friendly suggestions.",
           },
         },
-        required: ["related_item_title", "theory", "explanation", "actions"],
+        required: ["related_item_id", "essence", "true_goal", "suggestions"],
       },
     },
     thinking_modules: {
       type: Type.ARRAY,
-      description: "An array of analysis modules. You MUST create one separate module for EACH item listed in the user's THINKING section.",
+      description: "Analysis modules for THINKING section items.",
       items: {
         type: Type.OBJECT,
         properties: {
-          related_item_title: {
+          related_item_id: { type: Type.STRING, description: "The ID of the input item this analysis belongs to." },
+          essence: {
             type: Type.STRING,
-            description: "The exact title of the user's Thinking item that this module is analyzing.",
+            description: "1. The Essence: What is the core nature of this thought? Dig deep but explain it simply.",
           },
-          theory: {
+          true_goal: {
             type: Type.STRING,
-            description: "The specific cognitive psychology concept or mental model (e.g., 'Imposter Syndrome', 'Spotlight Effect', 'Fixed Mindset', 'Cognitive Dissonance').",
+            description: "2. True Goal: What is the user subconsciously trying to achieve?",
           },
-          explanation: {
-            type: Type.STRING,
-            description: "Deep dive explanation of the mental blocker. Why is the user thinking this way?",
-          },
-          actions: {
+          suggestions: {
             type: Type.ARRAY,
             items: { type: Type.STRING },
-            description: "3 specific cognitive reframing exercises or thinking tools.",
+            description: "3. AI Suggestions: Provide exactly 3 distinct, actionable, and friendly suggestions.",
           },
         },
-        required: ["related_item_title", "theory", "explanation", "actions"],
+        required: ["related_item_id", "essence", "true_goal", "suggestions"],
       },
     },
     encouragement: {
       type: Type.STRING,
-      description: "A final, brief reality-check or grounding statement.",
+      description: "A warm, encouraging closing statement.",
     },
   },
   required: ["bad_modules", "thinking_modules", "encouragement"],
@@ -74,56 +68,61 @@ export const analyzeReflection = async (input: ReflectionInput, language: Langua
 
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-  // Format arrays for prompt
+  // Format arrays for prompt with IDs
   const didText = input.did.filter(i => i.trim()).map(i => `- ${i}`).join('\n');
   
-  // Format Complex Objects into readable text
   const badText = input.bad
     .filter(i => i.title.trim())
-    .map((i, idx) => `Item ${idx + 1} Title: ${i.title}\n   Item ${idx + 1} Details: ${i.description || 'No details'}`)
+    .map((i) => `ID: ${i.id}\nTitle: ${i.title}\nDescription: ${i.description || 'No details'}`)
     .join('\n\n');
 
   const thinkingText = input.thinking
     .filter(i => i.title.trim())
-    .map((i, idx) => `Item ${idx + 1} Title: ${i.title}\n   Item ${idx + 1} Details: ${i.description || 'No details'}`)
+    .map((i) => `ID: ${i.id}\nTitle: ${i.title}\nDescription: ${i.description || 'No details'}`)
     .join('\n\n');
 
   const prompt = `
-    You are an expert Behavioral Scientist and Strategy Consultant.
+    You are a friendly, wise, and direct Personal Mentor. 
+    Your job is to analyze the user's daily reflection and provide clarity.
     
-    **TASK:**
-    Analyze the user's daily reflection. The user provides three sections: DID, BAD, and THINKING.
+    **TONE:**
+    - Direct and Honest (don't sugarcoat, but don't be harsh).
+    - Friendly and Warm (like a trusted older sibling or friend).
+    - Easy to understand (avoid academic jargon, use clear metaphors).
+    - Profound (don't just scratch the surface, tell them the truth).
     
-    **ANALYSIS RULES:**
-    1. **DID Section:** This is context only. Do NOT analyze it. Use it to understand the user's day.
-    2. **BAD Section (Behavioral Analysis):** 
-       - For EACH item listed in the BAD section, provide a separate analysis module.
-       - Focus strictly on what went wrong in their actions/habits.
-       - Identify the **Root Cause** using a specific **Scientific Theory** or **Psychological Concept**.
-       - Do NOT give literary advice. Give scientific explanations.
-    3. **THINKING Section (Cognitive Analysis):**
-       - For EACH item listed in the THINKING section, provide a separate analysis module.
-       - Focus strictly on their internal monologue, doubts, or confusion.
-       - Identify the **Cognitive Bias** or **Mental Model** failure.
-       - Do NOT mix this with the Bad section. Treat it as a separate cognitive problem.
+    **LANGUAGE:**
+    - If the user input is Chinese, output CHINESE.
+    - If English, output ENGLISH.
 
-    **OUTPUT RULES:**
-    - **Language:** IF User Input is Chinese -> Output Simplified Chinese. IF English -> Output English.
-    - **Tone:** Objective, Analytical, Clinical. No fluff. No "It's okay to feel this way."
-    - **Theories:** specific terms are required (e.g., "Zeigarnik Effect", "Pareto Principle", "Dunning-Kruger Effect").
-    - **Structure:** The output JSON must contain arrays 'bad_modules' and 'thinking_modules', with one entry for each valid input item.
+    **ANALYSIS STRUCTURE (For each item):**
+    
+    1. **The Essence (问题的本质):**
+       - Look behind the behavior. If they scrolled TikTok, maybe they are exhausted, not lazy.
+       - Explain *why* this is happening in one clear sentence.
+       
+    2. **True Goal (用户的真实目标):**
+       - What needs are they trying to meet? (Safety, Rest, Validation, Control?)
+       - Reframe their struggle as a misaligned attempt to meet a valid need.
+       
+    3. **3 Suggestions (AI建议):**
+       - Give exactly 3 suggestions.
+       - They should be concrete and actionable.
+       - Mix of mindset shifts and physical actions.
 
-    User's Reflection:
+    **INPUT DATA:**
     ---
-    [DID - Context (Do Not Analyze)]
+    [DID - Context]
     ${didText || "No entry"}
 
-    [BAD - Analyze Behaviors (Create one analysis per item)]
+    [BAD - Analyze These]
     ${badText || "No entry"}
 
-    [THINKING - Analyze Cognition (Create one analysis per item)]
+    [THINKING - Analyze These]
     ${thinkingText || "No entry"}
     ---
+    
+    IMPORTANT: Return the 'related_item_id' exactly as provided in the input.
   `;
 
   try {
@@ -133,7 +132,7 @@ export const analyzeReflection = async (input: ReflectionInput, language: Langua
       config: {
         responseMimeType: "application/json",
         responseSchema: analysisSchema,
-        temperature: 0.3, 
+        temperature: 0.75, 
       },
     });
 

@@ -12,16 +12,16 @@ export interface ReflectionInput {
 }
 
 export interface AnalysisModule {
-  related_item_title: string;
-  theory: string;
-  explanation: string;
-  actions: string[];
+  related_item_id: string;
+  essence: string;       // 1. The Essence of the problem
+  true_goal: string;     // 2. The User's True Goal
+  suggestions: string[]; // 3. Top 3 Core Suggestions
 }
 
 export interface AIAnalysis {
   bad_modules: AnalysisModule[];
   thinking_modules: AnalysisModule[];
-  encouragement: string;
+  encouragement: string; // Global encouragement
 }
 
 export enum LoadingState {

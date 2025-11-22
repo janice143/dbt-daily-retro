@@ -14,9 +14,9 @@ interface Translation {
   analyzing: React.ReactNode;
   badModuleTitle: string;
   thinkingModuleTitle: string;
-  theoryLabel: string;
-  analysisLabel: string;
-  actionLabel: string;
+  essenceLabel: string;   // New
+  trueGoalLabel: string;  // New
+  suggestionsLabel: string; // New
   startNew: string;
   errorGeneric: string;
   dismiss: string;
@@ -28,6 +28,10 @@ interface Translation {
   addMore: string;
   limitReached: string;
   maxLimitBadge: string;
+  rawDataLabel: string;
+  showRawData: string;
+  hideRawData: string;
+  discard: string;
 }
 
 export const translations: Record<Language, Translation> = {
@@ -43,11 +47,11 @@ export const translations: Record<Language, Translation> = {
     itemDescPlaceholder: "Description (e.g., I felt overwhelmed so I scrolled TikTok for 2 hours...)",
     submitButton: "Generate Analysis",
     analyzing: "Analyzing...",
-    badModuleTitle: "Behavioral Analysis (BAD)",
-    thinkingModuleTitle: "Cognitive Analysis (THINKING)",
-    theoryLabel: "Scientific Lens",
-    analysisLabel: "Deep Dive",
-    actionLabel: "Corrective Actions",
+    badModuleTitle: "Behavioral Analysis",
+    thinkingModuleTitle: "Cognitive Analysis",
+    essenceLabel: "The Essence",
+    trueGoalLabel: "Your True Goal",
+    suggestionsLabel: "My 3 Suggestions",
     startNew: "Start New Reflection",
     errorGeneric: "Something went wrong. Please try again.",
     dismiss: "Dismiss",
@@ -58,7 +62,11 @@ export const translations: Record<Language, Translation> = {
     fillTemplate: "Fill Example",
     addMore: "Add Item",
     limitReached: "Limit Reached",
-    maxLimitBadge: "Max 3 Items - Focus on the Critical Few"
+    maxLimitBadge: "Max 3 Items - Focus on the Critical Few",
+    rawDataLabel: "Raw AI Output (Debug)",
+    showRawData: "Show Raw Data",
+    hideRawData: "Hide Raw Data",
+    discard: "Discard"
   },
   zh: {
     subtitle: (
@@ -74,9 +82,9 @@ export const translations: Record<Language, Translation> = {
     analyzing: "正在深入剖析...",
     badModuleTitle: "行为模式分析 (针对 Bad)",
     thinkingModuleTitle: "认知模式分析 (针对 Thinking)",
-    theoryLabel: "科学视角",
-    analysisLabel: "本质拆解",
-    actionLabel: "行动方案",
+    essenceLabel: "问题的本质",
+    trueGoalLabel: "你的真实目标",
+    suggestionsLabel: "给你的3条建议",
     startNew: "开始新的复盘",
     errorGeneric: "出错了，请重试。",
     dismiss: "关闭",
@@ -87,6 +95,10 @@ export const translations: Record<Language, Translation> = {
     fillTemplate: "一键填入示例",
     addMore: "添加事项",
     limitReached: "已达上限",
-    maxLimitBadge: "上限3条，深度复盘核心问题"
+    maxLimitBadge: "上限3条，深度复盘核心问题",
+    rawDataLabel: "AI 原始输出 (调试)",
+    showRawData: "显示原始数据",
+    hideRawData: "隐藏原始数据",
+    discard: "移除此卡片"
   }
 };

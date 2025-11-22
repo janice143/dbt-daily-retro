@@ -1,5 +1,5 @@
 {
-  "name": "Copy of InsightLoop - AI Reflection Mentor",
+  "name": "DBT Retro - AI Reflection Mentor",
   "description": "A structured reflection tool based on the Did/Bad/Thinking framework. It uses Gemini AI to act as a life mentor, analyzing your daily inputs to uncover root causes and provide actionable advice.",
   "requestFramePermissions": []
 }

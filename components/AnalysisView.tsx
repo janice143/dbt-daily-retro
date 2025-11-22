@@ -1,19 +1,20 @@
 
 import React, { useRef, useState } from 'react';
 import { AIAnalysis, ReflectionInput, AnalysisModule, ReflectionItem } from '../types';
-import { Target, Quote, RefreshCw, Download, CheckCircle2, AlertCircle, Cloud, BookOpen } from 'lucide-react';
+import { Target, Quote, RefreshCw, Download, CheckCircle2, AlertCircle, Cloud, Lightbulb, Zap, Footprints, Layers, Code, ChevronDown, ChevronUp, Trash2, Search, ArrowRight, Calendar } from 'lucide-react';
 import { toPng } from 'html-to-image';
 
 interface Props {
   input: ReflectionInput;
   analysis: AIAnalysis;
   onReset: () => void;
+  date: string;
   t: {
     badModuleTitle: string;
     thinkingModuleTitle: string;
-    theoryLabel: string;
-    analysisLabel: string;
-    actionLabel: string;
+    essenceLabel: string;
+    trueGoalLabel: string;
+    suggestionsLabel: string;
     startNew: string;
     yourReflection: string;
     exportButton: string;
@@ -21,84 +22,136 @@ interface Props {
     didLabel: string;
     badLabel: string;
     thinkingLabel: string;
+    rawDataLabel: string;
+    showRawData: string;
+    hideRawData: string;
+    discard: string;
   }
 }
 
 const ModuleCard: React.FC<{
   categoryLabel: string;
   itemTitle: string;
+  itemDescription?: string;
   icon: React.ReactNode;
   module: AnalysisModule;
   colorClass: string; // 'red' or 'blue'
   t: Props['t'];
-}> = ({ categoryLabel, itemTitle, icon, module, colorClass, t }) => {
+}> = ({ categoryLabel, itemTitle, itemDescription, icon, module, colorClass, t }) => {
   const bgGradient = colorClass === 'red' ? 'from-red-500 to-red-600' : 'from-blue-500 to-blue-600';
   const lightBg = colorClass === 'red' ? 'bg-red-50' : 'bg-blue-50';
-  const textDark = colorClass === 'red' ? 'text-red-800' : 'text-blue-800';
-  const textLight = colorClass === 'red' ? 'text-red-100' : 'text-blue-100';
+  const borderColor = colorClass === 'red' ? 'border-red-100' : 'border-blue-100';
+  const iconColor = colorClass === 'red' ? 'text-red-500' : 'text-blue-500';
+  const textColor = colorClass === 'red' ? 'text-red-900' : 'text-blue-900';
+  const bulletColor = colorClass === 'red' ? 'bg-red-400' : 'bg-blue-400';
+
+  // Fallback title if matching failed
+  const displayTitle = itemTitle || "Analysis";
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 mb-8 last:mb-0">
+    <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 mb-10 last:mb-0 group/module">
       {/* Header */}
-      <div className={`bg-gradient-to-br ${bgGradient} p-6 text-white`}>
+      <div className={`bg-gradient-to-br ${bgGradient} p-6 text-white relative`}>
+        
         <div className="flex items-center gap-2 mb-2 opacity-80">
           {icon}
           <span className={`text-xs font-bold uppercase tracking-widest`}>{categoryLabel}</span>
         </div>
-        <h2 className="text-2xl font-bold text-white leading-tight mb-4">{itemTitle || module.related_item_title}</h2>
+        <h2 className="text-2xl font-bold text-white leading-tight mb-3 pr-10">{displayTitle}</h2>
         
-        <div className="flex items-start gap-3 mt-4 pt-4 border-t border-white/20">
-          <BookOpen className={`w-6 h-6 ${textLight} shrink-0 mt-1`} />
+        {itemDescription && (
+          <div className="bg-white/10 rounded-xl p-3 border border-white/20 backdrop-blur-sm text-white/90 text-sm leading-relaxed font-normal">
+            {itemDescription}
+          </div>
+        )}
+      </div>
+
+      <div className="grid lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x border-slate-100">
+        
+        {/* LEFT: Essence & True Goal */}
+        <div className="p-8 space-y-8">
+          {/* 1. Essence */}
           <div>
-             <span className={`text-xs font-medium ${textLight} opacity-80 uppercase mb-1 block`}>{t.theoryLabel}</span>
-             <p className="text-xl font-serif font-medium leading-tight">{module.theory}</p>
+            <div className="flex items-center gap-2 mb-3">
+              <Search className="w-5 h-5 text-amber-500" />
+              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">{t.essenceLabel}</h3>
+            </div>
+            <p className="text-slate-800 leading-relaxed text-lg font-medium">
+              {module.essence}
+            </p>
+          </div>
+
+          {/* 2. True Goal */}
+          <div className={`p-5 rounded-xl border ${borderColor} ${lightBg}`}>
+            <div className="flex items-center gap-2 mb-2">
+              <Target className={`w-5 h-5 ${iconColor}`} />
+              <h3 className={`text-xs font-bold uppercase tracking-widest ${textColor} opacity-70`}>{t.trueGoalLabel}</h3>
+            </div>
+            <p className={`text-base font-semibold ${textColor} leading-relaxed`}>
+              {module.true_goal}
+            </p>
           </div>
         </div>
-      </div>
 
-      {/* Explanation */}
-      <div className="p-8 border-b border-slate-100">
-        <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">{t.analysisLabel}</h3>
-        <p className="text-slate-700 leading-relaxed text-lg">
-          {module.explanation}
-        </p>
-      </div>
-
-      {/* Actions */}
-      <div className={`p-8 ${lightBg}`}>
-        <h3 className={`text-xs font-bold uppercase tracking-widest mb-6 flex items-center gap-2 ${textDark}`}>
-          <Target className="w-4 h-4" />
-          {t.actionLabel}
-        </h3>
-        <div className="space-y-3">
-          {module.actions.map((step, idx) => (
-            <div key={idx} className="flex gap-4 bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm">
-              <div className={`flex-shrink-0 w-6 h-6 rounded-full ${colorClass === 'red' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'} flex items-center justify-center font-bold text-xs`}>
-                {idx + 1}
-              </div>
-              <p className="text-slate-700 text-sm font-medium mt-0.5">{step}</p>
-            </div>
-          ))}
+        {/* RIGHT: 3 Suggestions */}
+        <div className="p-8 bg-slate-50/50">
+           <div className="flex items-center gap-2 mb-6">
+              <Zap className={`w-5 h-5 ${iconColor}`} />
+              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">{t.suggestionsLabel}</h3>
+           </div>
+           
+           <ul className="space-y-4">
+             {module.suggestions.map((suggestion, idx) => (
+               <li key={idx} className="flex items-start gap-3">
+                 <div className={`w-6 h-6 rounded-full ${bulletColor} text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5`}>
+                   {idx + 1}
+                 </div>
+                 <p className="text-slate-700 text-sm font-medium leading-relaxed pt-0.5">
+                   {suggestion}
+                 </p>
+               </li>
+             ))}
+           </ul>
         </div>
+
       </div>
     </div>
   );
 };
 
-export const AnalysisView: React.FC<Props> = ({ input, analysis, onReset, t }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+export const AnalysisView: React.FC<Props> = ({ input, analysis, onReset, date, t }) => {
+  const aiAnalysisRef = useRef<HTMLDivElement>(null);
+  const userContentRef = useRef<HTMLDivElement>(null);
+  
   const [isDownloading, setIsDownloading] = useState(false);
-
+  const [showRaw, setShowRaw] = useState(true);
+  
   const handleExport = async () => {
     setIsDownloading(true);
     try {
-      if (containerRef.current) {
-        const dataUrl = await toPng(containerRef.current, { cacheBust: true, backgroundColor: '#F8FAFC' });
-        const link = document.createElement('a');
-        link.download = 'insightloop-analysis-full.png';
-        link.href = dataUrl;
-        link.click();
+      const dateStr = date.replace(/[^\w]/g, '-');
+      
+      // 1. Export AI Analysis Image
+      if (aiAnalysisRef.current) {
+        const dataUrl1 = await toPng(aiAnalysisRef.current, { cacheBust: true, backgroundColor: '#F8FAFC' });
+        const link1 = document.createElement('a');
+        link1.download = `insightloop-analysis-${dateStr}.png`;
+        link1.href = dataUrl1;
+        link1.click();
       }
+
+      // Slight delay to ensure smooth download triggering
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // 2. Export User Content Image
+      if (userContentRef.current) {
+        const dataUrl2 = await toPng(userContentRef.current, { cacheBust: true, backgroundColor: '#F8FAFC' });
+        const link2 = document.createElement('a');
+        link2.download = `insightloop-reflection-${dateStr}.png`;
+        link2.href = dataUrl2;
+        link2.click();
+      }
+
     } catch (err) {
       console.error('Failed to export images', err);
     } finally {
@@ -128,41 +181,58 @@ export const AnalysisView: React.FC<Props> = ({ input, analysis, onReset, t }) =
   );
 
   return (
-    <div className="max-w-3xl mx-auto w-full px-4 pb-20 animate-fade-in space-y-8">
+    <div className="max-w-4xl mx-auto w-full px-4 pb-20 animate-fade-in space-y-8">
       
-      <div ref={containerRef} className="space-y-8 p-4 bg-[#F8FAFC]">
+      {/* --- SECTION 1: AI ANALYSIS --- */}
+      <div ref={aiAnalysisRef} className="space-y-8 p-6 bg-[#F8FAFC] rounded-xl">
         
+        {/* Date Header */}
+        <div className="flex items-center justify-center text-slate-600 text-2xl font-bold gap-3 mb-8 pt-4">
+           <Calendar className="w-6 h-6 text-brand-500" />
+           {date}
+        </div>
+
         {/* Bad Analysis Section */}
         {analysis.bad_modules && analysis.bad_modules.length > 0 && (
           <div className="space-y-6">
-            {analysis.bad_modules.map((module, idx) => (
-              <ModuleCard 
-                key={`bad-${idx}`}
-                categoryLabel={t.badModuleTitle}
-                itemTitle={module.related_item_title}
-                icon={<AlertCircle className="w-5 h-5 text-red-100" />}
-                module={module}
-                colorClass="red"
-                t={t}
-              />
-            ))}
+            {analysis.bad_modules.map((module, idx) => {
+              // Match by ID
+              const originalItem = input.bad.find(i => i.id === module.related_item_id);
+              return (
+                <ModuleCard 
+                  key={`bad-${idx}`}
+                  categoryLabel={t.badModuleTitle}
+                  itemTitle={originalItem ? originalItem.title : "Analysis"}
+                  itemDescription={originalItem ? originalItem.description : ""}
+                  icon={<AlertCircle className="w-5 h-5 text-red-100" />}
+                  module={module}
+                  colorClass="red"
+                  t={t}
+                />
+              );
+            })}
           </div>
         )}
 
         {/* Thinking Analysis Section */}
         {analysis.thinking_modules && analysis.thinking_modules.length > 0 && (
           <div className="space-y-6">
-            {analysis.thinking_modules.map((module, idx) => (
-              <ModuleCard 
-                key={`thinking-${idx}`}
-                categoryLabel={t.thinkingModuleTitle}
-                itemTitle={module.related_item_title}
-                icon={<Cloud className="w-5 h-5 text-blue-100" />}
-                module={module}
-                colorClass="blue"
-                t={t}
-              />
-            ))}
+            {analysis.thinking_modules.map((module, idx) => {
+              // Match by ID
+              const originalItem = input.thinking.find(i => i.id === module.related_item_id);
+              return (
+                <ModuleCard 
+                  key={`thinking-${idx}`}
+                  categoryLabel={t.thinkingModuleTitle}
+                  itemTitle={originalItem ? originalItem.title : "Analysis"}
+                  itemDescription={originalItem ? originalItem.description : ""}
+                  icon={<Cloud className="w-5 h-5 text-blue-100" />}
+                  module={module}
+                  colorClass="blue"
+                  t={t}
+                />
+              );
+            })}
           </div>
         )}
 
@@ -171,12 +241,18 @@ export const AnalysisView: React.FC<Props> = ({ input, analysis, onReset, t }) =
           <Quote className="w-8 h-8 text-brand-400 mx-auto mb-4" />
           <p className="text-white text-lg font-medium italic leading-relaxed">"{analysis.encouragement}"</p>
         </div>
+      </div>
 
-        {/* User Reflection Summary */}
-        <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-8 mt-8">
-          <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6 border-b border-slate-100 pb-4">
-            {t.yourReflection}
-          </h3>
+
+      {/* --- SECTION 2: USER CONTENT --- */}
+      <div ref={userContentRef} className="p-6 bg-[#F8FAFC] rounded-xl">
+        <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-8">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+            <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+                {t.yourReflection}
+            </h3>
+            <span className="text-slate-400 text-sm font-medium">{date}</span>
+          </div>
           
           <div className="grid md:grid-cols-2 gap-8">
              {/* Did */}
@@ -214,6 +290,30 @@ export const AnalysisView: React.FC<Props> = ({ input, analysis, onReset, t }) =
           </div>
         </div>
       </div>
+      
+      {/* Debug / Raw Data Toggle */}
+      <div className="flex justify-center">
+        <button 
+            onClick={() => setShowRaw(!showRaw)}
+            className="text-slate-400 text-xs font-medium hover:text-slate-600 flex items-center gap-1"
+        >
+            {showRaw ? <ChevronUp className="w-3 h-3"/> : <ChevronDown className="w-3 h-3"/>}
+            {showRaw ? t.hideRawData : t.showRawData}
+        </button>
+      </div>
+
+      {/* Raw Data View */}
+      {showRaw && (
+          <div className="mt-4 p-6 bg-slate-900 rounded-xl overflow-hidden border border-slate-800">
+            <div className="flex items-center gap-2 mb-4 border-b border-slate-700 pb-2">
+                <Code className="w-4 h-4 text-green-400" />
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.rawDataLabel}</span>
+            </div>
+            <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap overflow-x-auto max-h-96">
+                {JSON.stringify(analysis, null, 2)}
+            </pre>
+          </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">

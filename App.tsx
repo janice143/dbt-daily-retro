@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Header } from './components/Header';
 import { ReflectionForm } from './components/ReflectionForm';
@@ -12,7 +11,16 @@ const App: React.FC = () => {
   const [status, setStatus] = useState<LoadingState>(LoadingState.IDLE);
   const [result, setResult] = useState<AIAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [language, setLanguage] = useState<Language>('en');
+  // Default to Chinese ('zh') as requested
+  const [language, setLanguage] = useState<Language>('zh');
+
+  // Generate current date
+  const todayDate = new Date().toLocaleDateString('zh-CN', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric', 
+    weekday: 'long' 
+  });
 
   const t = translations[language];
 
@@ -46,6 +54,7 @@ const App: React.FC = () => {
         }
       ]
     });
+    // Ensure language is set to zh when filling template (though it's default now)
     setLanguage('zh');
   }, []);
 
@@ -87,7 +96,7 @@ const App: React.FC = () => {
         )}
 
         {status === LoadingState.SUCCESS && result ? (
-          <AnalysisView input={input} analysis={result} onReset={handleReset} t={t} />
+          <AnalysisView input={input} analysis={result} onReset={handleReset} t={t} date={todayDate} />
         ) : (
           <ReflectionForm 
             input={input} 
