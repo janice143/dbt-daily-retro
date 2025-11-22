@@ -14,9 +14,9 @@ interface Translation {
   analyzing: React.ReactNode;
   badModuleTitle: string;
   thinkingModuleTitle: string;
-  essenceLabel: string;   // New
-  trueGoalLabel: string;  // New
-  suggestionsLabel: string; // New
+  essenceLabel: string;   
+  trueGoalLabel: string;  
+  suggestionsLabel: string; 
   startNew: string;
   errorGeneric: string;
   dismiss: string;
@@ -28,10 +28,6 @@ interface Translation {
   addMore: string;
   limitReached: string;
   maxLimitBadge: string;
-  rawDataLabel: string;
-  showRawData: string;
-  hideRawData: string;
-  discard: string;
 }
 
 export const translations: Record<Language, Translation> = {
@@ -63,10 +59,6 @@ export const translations: Record<Language, Translation> = {
     addMore: "Add Item",
     limitReached: "Limit Reached",
     maxLimitBadge: "Max 3 Items - Focus on the Critical Few",
-    rawDataLabel: "Raw AI Output (Debug)",
-    showRawData: "Show Raw Data",
-    hideRawData: "Hide Raw Data",
-    discard: "Discard"
   },
   zh: {
     subtitle: (
@@ -96,9 +88,5 @@ export const translations: Record<Language, Translation> = {
     addMore: "添加事项",
     limitReached: "已达上限",
     maxLimitBadge: "上限3条，深度复盘核心问题",
-    rawDataLabel: "AI 原始输出 (调试)",
-    showRawData: "显示原始数据",
-    hideRawData: "隐藏原始数据",
-    discard: "移除此卡片"
   }
 };

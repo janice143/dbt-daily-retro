@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { AIAnalysis, ReflectionInput, AnalysisModule, ReflectionItem } from '../types';
-import { Target, Quote, RefreshCw, Download, CheckCircle2, AlertCircle, Cloud, Lightbulb, Zap, Footprints, Layers, Code, ChevronDown, ChevronUp, Trash2, Search, ArrowRight, Calendar } from 'lucide-react';
+import { Target, Quote, RefreshCw, Download, CheckCircle2, AlertCircle, Cloud, Zap, Search, Calendar } from 'lucide-react';
 import { toPng } from 'html-to-image';
 
 interface Props {
@@ -22,10 +22,6 @@ interface Props {
     didLabel: string;
     badLabel: string;
     thinkingLabel: string;
-    rawDataLabel: string;
-    showRawData: string;
-    hideRawData: string;
-    discard: string;
   }
 }
 
@@ -120,34 +116,43 @@ const ModuleCard: React.FC<{
 };
 
 export const AnalysisView: React.FC<Props> = ({ input, analysis, onReset, date, t }) => {
+  const combinedRef = useRef<HTMLDivElement>(null);
   const aiAnalysisRef = useRef<HTMLDivElement>(null);
   const userContentRef = useRef<HTMLDivElement>(null);
   
   const [isDownloading, setIsDownloading] = useState(false);
-  const [showRaw, setShowRaw] = useState(true);
   
   const handleExport = async () => {
     setIsDownloading(true);
     try {
       const dateStr = date.replace(/[^\w]/g, '-');
+      const options = { cacheBust: true, backgroundColor: '#F8FAFC' };
       
-      // 1. Export AI Analysis Image
-      if (aiAnalysisRef.current) {
-        const dataUrl1 = await toPng(aiAnalysisRef.current, { cacheBust: true, backgroundColor: '#F8FAFC' });
-        const link1 = document.createElement('a');
-        link1.download = `insightloop-analysis-${dateStr}.png`;
-        link1.href = dataUrl1;
-        link1.click();
+      // 1. Export Combined (Full Report)
+      if (combinedRef.current) {
+        const dataUrl = await toPng(combinedRef.current, options);
+        const link = document.createElement('a');
+        link.download = `dbt-retro-full-${dateStr}.png`;
+        link.href = dataUrl;
+        link.click();
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
 
-      // Slight delay to ensure smooth download triggering
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // 2. Export AI Analysis Image
+      if (aiAnalysisRef.current) {
+        const dataUrl1 = await toPng(aiAnalysisRef.current, options);
+        const link1 = document.createElement('a');
+        link1.download = `dbt-retro-analysis-${dateStr}.png`;
+        link1.href = dataUrl1;
+        link1.click();
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
 
-      // 2. Export User Content Image
+      // 3. Export User Content Image
       if (userContentRef.current) {
-        const dataUrl2 = await toPng(userContentRef.current, { cacheBust: true, backgroundColor: '#F8FAFC' });
+        const dataUrl2 = await toPng(userContentRef.current, options);
         const link2 = document.createElement('a');
-        link2.download = `insightloop-reflection-${dateStr}.png`;
+        link2.download = `dbt-retro-reflection-${dateStr}.png`;
         link2.href = dataUrl2;
         link2.click();
       }
@@ -181,142 +186,123 @@ export const AnalysisView: React.FC<Props> = ({ input, analysis, onReset, date, 
   );
 
   return (
-    <div className="max-w-4xl mx-auto w-full px-4 pb-20 animate-fade-in space-y-8">
+    <div className="max-w-4xl mx-auto w-full px-4 pb-20 animate-fade-in">
       
-      {/* --- SECTION 1: AI ANALYSIS --- */}
-      <div ref={aiAnalysisRef} className="space-y-8 p-6 bg-[#F8FAFC] rounded-xl">
+      {/* Combined Wrapper for Full Report Screenshot */}
+      <div ref={combinedRef} className="space-y-8 bg-[#F8FAFC] p-2 rounded-xl">
         
-        {/* Date Header */}
-        <div className="flex items-center justify-center text-slate-600 text-2xl font-bold gap-3 mb-8 pt-4">
-           <Calendar className="w-6 h-6 text-brand-500" />
-           {date}
-        </div>
-
-        {/* Bad Analysis Section */}
-        {analysis.bad_modules && analysis.bad_modules.length > 0 && (
-          <div className="space-y-6">
-            {analysis.bad_modules.map((module, idx) => {
-              // Match by ID
-              const originalItem = input.bad.find(i => i.id === module.related_item_id);
-              return (
-                <ModuleCard 
-                  key={`bad-${idx}`}
-                  categoryLabel={t.badModuleTitle}
-                  itemTitle={originalItem ? originalItem.title : "Analysis"}
-                  itemDescription={originalItem ? originalItem.description : ""}
-                  icon={<AlertCircle className="w-5 h-5 text-red-100" />}
-                  module={module}
-                  colorClass="red"
-                  t={t}
-                />
-              );
-            })}
-          </div>
-        )}
-
-        {/* Thinking Analysis Section */}
-        {analysis.thinking_modules && analysis.thinking_modules.length > 0 && (
-          <div className="space-y-6">
-            {analysis.thinking_modules.map((module, idx) => {
-              // Match by ID
-              const originalItem = input.thinking.find(i => i.id === module.related_item_id);
-              return (
-                <ModuleCard 
-                  key={`thinking-${idx}`}
-                  categoryLabel={t.thinkingModuleTitle}
-                  itemTitle={originalItem ? originalItem.title : "Analysis"}
-                  itemDescription={originalItem ? originalItem.description : ""}
-                  icon={<Cloud className="w-5 h-5 text-blue-100" />}
-                  module={module}
-                  colorClass="blue"
-                  t={t}
-                />
-              );
-            })}
-          </div>
-        )}
-
-        {/* Encouragement */}
-        <div className="bg-slate-800 rounded-2xl p-8 text-center shadow-lg">
-          <Quote className="w-8 h-8 text-brand-400 mx-auto mb-4" />
-          <p className="text-white text-lg font-medium italic leading-relaxed">"{analysis.encouragement}"</p>
-        </div>
-      </div>
-
-
-      {/* --- SECTION 2: USER CONTENT --- */}
-      <div ref={userContentRef} className="p-6 bg-[#F8FAFC] rounded-xl">
-        <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-8">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
-            <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest">
-                {t.yourReflection}
-            </h3>
-            <span className="text-slate-400 text-sm font-medium">{date}</span>
-          </div>
+        {/* --- SECTION 1: AI ANALYSIS --- */}
+        <div ref={aiAnalysisRef} className="space-y-8 p-6 bg-[#F8FAFC] rounded-xl">
           
-          <div className="grid md:grid-cols-2 gap-8">
-             {/* Did */}
-             <div className="md:col-span-2">
-               <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span className="text-xs font-bold text-slate-500 uppercase">{t.didLabel}</span>
-               </div>
-               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  {renderSimpleList(input.did)}
-               </div>
-             </div>
+          {/* Date Header */}
+          <div className="flex items-center justify-center text-slate-600 text-2xl font-bold gap-3 mb-8 pt-4">
+            <Calendar className="w-6 h-6 text-brand-500" />
+            {date}
+          </div>
 
-             {/* Bad */}
-             <div>
-               <div className="flex items-center gap-2 mb-2">
-                  <AlertCircle className="w-4 h-4 text-red-500" />
-                  <span className="text-xs font-bold text-slate-500 uppercase">{t.badLabel}</span>
-               </div>
-               <div className="bg-red-50/50 p-4 rounded-xl border border-red-100 h-full">
-                  {renderComplexList(input.bad)}
-               </div>
-             </div>
+          {/* Bad Analysis Section */}
+          {analysis.bad_modules && analysis.bad_modules.length > 0 && (
+            <div className="space-y-6">
+              {analysis.bad_modules.map((module, idx) => {
+                // Match by ID
+                const originalItem = input.bad.find(i => i.id === module.related_item_id);
+                return (
+                  <ModuleCard 
+                    key={`bad-${idx}`}
+                    categoryLabel={t.badModuleTitle}
+                    itemTitle={originalItem ? originalItem.title : "Analysis"}
+                    itemDescription={originalItem ? originalItem.description : ""}
+                    icon={<AlertCircle className="w-5 h-5 text-red-100" />}
+                    module={module}
+                    colorClass="red"
+                    t={t}
+                  />
+                );
+              })}
+            </div>
+          )}
 
-             {/* Thinking */}
-             <div>
-               <div className="flex items-center gap-2 mb-2">
-                  <Cloud className="w-4 h-4 text-blue-500" />
-                  <span className="text-xs font-bold text-slate-500 uppercase">{t.thinkingLabel}</span>
-               </div>
-               <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 h-full">
-                  {renderComplexList(input.thinking)}
-               </div>
-             </div>
+          {/* Thinking Analysis Section */}
+          {analysis.thinking_modules && analysis.thinking_modules.length > 0 && (
+            <div className="space-y-6">
+              {analysis.thinking_modules.map((module, idx) => {
+                // Match by ID
+                const originalItem = input.thinking.find(i => i.id === module.related_item_id);
+                return (
+                  <ModuleCard 
+                    key={`thinking-${idx}`}
+                    categoryLabel={t.thinkingModuleTitle}
+                    itemTitle={originalItem ? originalItem.title : "Analysis"}
+                    itemDescription={originalItem ? originalItem.description : ""}
+                    icon={<Cloud className="w-5 h-5 text-blue-100" />}
+                    module={module}
+                    colorClass="blue"
+                    t={t}
+                  />
+                );
+              })}
+            </div>
+          )}
+
+          {/* Encouragement */}
+          <div className="bg-slate-800 rounded-2xl p-8 text-center shadow-lg">
+            <Quote className="w-8 h-8 text-brand-400 mx-auto mb-4" />
+            <p className="text-white text-lg font-medium italic leading-relaxed">"{analysis.encouragement}"</p>
           </div>
         </div>
+
+
+        {/* --- SECTION 2: USER CONTENT --- */}
+        <div ref={userContentRef} className="p-6 bg-[#F8FAFC] rounded-xl">
+          <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-8">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+              <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+                  {t.yourReflection}
+              </h3>
+              <span className="text-slate-400 text-sm font-medium">{date}</span>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Did */}
+              <div className="md:col-span-2">
+                <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    <span className="text-xs font-bold text-slate-500 uppercase">{t.didLabel}</span>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    {renderSimpleList(input.did)}
+                </div>
+              </div>
+
+              {/* Bad */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle className="w-4 h-4 text-red-500" />
+                    <span className="text-xs font-bold text-slate-500 uppercase">{t.badLabel}</span>
+                </div>
+                <div className="bg-red-50/50 p-4 rounded-xl border border-red-100 h-full">
+                    {renderComplexList(input.bad)}
+                </div>
+              </div>
+
+              {/* Thinking */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                    <Cloud className="w-4 h-4 text-blue-500" />
+                    <span className="text-xs font-bold text-slate-500 uppercase">{t.thinkingLabel}</span>
+                </div>
+                <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 h-full">
+                    {renderComplexList(input.thinking)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
       
-      {/* Debug / Raw Data Toggle */}
-      <div className="flex justify-center">
-        <button 
-            onClick={() => setShowRaw(!showRaw)}
-            className="text-slate-400 text-xs font-medium hover:text-slate-600 flex items-center gap-1"
-        >
-            {showRaw ? <ChevronUp className="w-3 h-3"/> : <ChevronDown className="w-3 h-3"/>}
-            {showRaw ? t.hideRawData : t.showRawData}
-        </button>
-      </div>
-
-      {/* Raw Data View */}
-      {showRaw && (
-          <div className="mt-4 p-6 bg-slate-900 rounded-xl overflow-hidden border border-slate-800">
-            <div className="flex items-center gap-2 mb-4 border-b border-slate-700 pb-2">
-                <Code className="w-4 h-4 text-green-400" />
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.rawDataLabel}</span>
-            </div>
-            <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap overflow-x-auto max-h-96">
-                {JSON.stringify(analysis, null, 2)}
-            </pre>
-          </div>
-      )}
-
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 mt-8">
         <button
           onClick={handleExport}
           disabled={isDownloading}
